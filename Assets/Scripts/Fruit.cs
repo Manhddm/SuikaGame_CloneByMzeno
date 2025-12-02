@@ -32,6 +32,8 @@ public class Fruit : MonoBehaviour
             GameObject newFruit = Instantiate(nextFruitPrefab, newPosition, Quaternion.identity);
             //Them luc day
             newFruit.GetComponent<Rigidbody2D>().linearVelocity  = Vector2.zero;
+            
+            GameManager.Instance.AddScore(scoreValue);
         }
         
     }
