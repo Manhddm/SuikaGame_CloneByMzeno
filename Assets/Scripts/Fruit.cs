@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -12,10 +13,16 @@ public class Fruit : MonoBehaviour
     public float mass = 1;
     private bool hasMerged = false;
     public bool inBox = false;
+    private bool canMerge;
     
-    
-    private void OnCollisionEnter2D(Collision2D other)
+    void Start()
     {
+        GetComponent<Rigidbody2D>().mass = mass;
+        StartCoroutine(SpawnProcess());
+    }
+    private void OnCollisionStay2D(Collision2D other)
+    {
+        if (!canMerge) return;
         if (other.gameObject.CompareTag("Fruit") || other.gameObject.CompareTag("Boder"))
         {
             inBox = true;
@@ -23,9 +30,13 @@ public class Fruit : MonoBehaviour
         if (other.gameObject.CompareTag("Fruit"))
         {
             var oFruit = other.gameObject.GetComponent<Fruit>();
-            if (GetInstanceID() > oFruit.GetInstanceID() && fruitLevel == oFruit.fruitLevel )
+            if (oFruit != null && oFruit.canMerge)
             {
-                Merge(oFruit);
+                if (GetInstanceID() > oFruit.GetInstanceID() && fruitLevel == oFruit.fruitLevel
+                                                             && !hasMerged && !oFruit.hasMerged)
+                {
+                    Merge(oFruit);
+                }
             }
         }
     }
@@ -35,7 +46,7 @@ public class Fruit : MonoBehaviour
         hasMerged = true;
         otherFruit.hasMerged = true;
         Vector3 newPosition = (otherFruit.transform.position + transform.position)/2f;
-        
+        AudioManager.Instance.PlayMergeSfx();
         if (vfxMergePrefab != null)
         {
             GameObject vfx = Instantiate(vfxMergePrefab, newPosition, Quaternion.identity);
@@ -50,7 +61,15 @@ public class Fruit : MonoBehaviour
             //Them luc day
             newFruit.GetComponent<Rigidbody2D>().linearVelocity  = Vector2.zero;
             GameManager.Instance.AddScore(scoreValue);
+            GameManager.Instance.TriggerMerge();
         }
         
+    }
+
+    IEnumerator SpawnProcess()
+    {
+        canMerge = false;
+        yield return new WaitForSeconds(0.5f);
+        canMerge = true;
     }
 }

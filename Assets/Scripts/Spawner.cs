@@ -18,18 +18,20 @@ public class Spawner : MonoBehaviour
     private GameObject currentFruitPrefab;
     private GameObject nextFruitPrefab;
     private bool isSpawning;
-    
-    void Start()
+
+    private void Start()
     {
         SpawnNextInBubble();
         MoveToHand();
         SpawnNextInBubble();
     }
 
-    void Update()
+    private void Update()
     {
+        if (GameManager.Instance.gameOver) return;
         if (!isSpawning && currentFruitPrefab != null && Input.GetMouseButtonDown(0))
         {
+            AudioManager.Instance.PlayDropSfx();
             StartCoroutine(DropFruit());
         }
     }

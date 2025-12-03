@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -8,8 +10,12 @@ public class GameManager : MonoBehaviour
 
     public TMP_Text scoreText;
     public GameObject gameOverPanel;
+    public CanvasGroup gameOverPanelCanvasGroup;
+    public float fadeDuration = 1f;
+    public event Action OnMergeEvent;
+    public event Action GameOverEvent;
     private int currentScore = 0;
-    private bool gameOver = false;
+    public bool gameOver = false;
 
     private void Awake()
     {
@@ -20,6 +26,10 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         UpdateScoreUI();
+        if (gameOverPanelCanvasGroup)
+        {
+            gameOverPanelCanvasGroup.alpha = 0;
+        }
     }
     public void AddScore(int score)
     {
@@ -33,10 +43,40 @@ public class GameManager : MonoBehaviour
         scoreText.text = currentScore.ToString();
     }
 
+    public void TriggerMerge()
+    {
+        OnMergeEvent?.Invoke();
+    }
+    
     public void GameOver()
     {
         gameOver = true;
-        Debug.Log("Game Over");
-        if (gameOverPanel) gameOverPanel.SetActive(true);
+        GameOverEvent?.Invoke();
+
+        if (gameOverPanel)
+        {
+            gameOverPanel.SetActive(true);
+            StartCoroutine(FadeInGameOverPanel());
+        }
+    }
+    
+    IEnumerator FadeInGameOverPanel()
+    {
+        float elapsed = 0f;
+        AudioManager.Instance.PlayGameOverSfx();
+        while (elapsed < fadeDuration)
+        {
+            AudioManager.Instance.MuteMusic(true);
+            elapsed += Time.deltaTime;
+            gameOverPanelCanvasGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / fadeDuration);
+            yield return null;
+        }
+        AudioManager.Instance.MuteMusic(false);
+        gameOverPanelCanvasGroup.alpha = 1f;
+    }
+
+    public void OnClickBack()
+    {
+        SceneManager.LoadScene(0);
     }
 }
