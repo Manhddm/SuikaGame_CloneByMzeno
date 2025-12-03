@@ -6,6 +6,12 @@ A Unity clone of the popular Japanese puzzle game **Suika Game (Watermelon Game)
 ![C#](https://img.shields.io/badge/C%23-239120?logo=c-sharp&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
+## 🎬 Demo
+
+[![Suika Game Demo](https://img.youtube.com/vi/h2MLKCgzKBA/maxresdefault.jpg)](https://youtu.be/h2MLKCgzKBA)
+
+> 👆 Click vào ảnh để xem video demo!
+
 ## 🎮 Gameplay
 
 Suika Game is a puzzle game where you drop fruits into a container. When two fruits of the same type collide, they merge into a larger fruit. The goal is to create the largest watermelon while preventing fruits from overflowing the container.
