@@ -30,8 +30,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -107,7 +107,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Fruit
   fruitLevel: 8
   nextFruitPrefab: {fileID: 3679023244646149597, guid: 4665d7b5a7623ef4ba0c1604b7373af0, type: 3}
-  scoreValue: 10
+  scoreValue: 600
+  mass: 2.6
 --- !u!50 &2100311757414697649
 Rigidbody2D:
   serializedVersion: 5

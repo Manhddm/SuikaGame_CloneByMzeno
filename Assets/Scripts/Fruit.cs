@@ -6,10 +6,16 @@ public class Fruit : MonoBehaviour
     public int fruitLevel;
     public GameObject nextFruitPrefab;
     public int scoreValue = 10;
-    private bool hasMerged = false;
 
+    public float mass = 1;
+    private bool hasMerged = false;
+    public bool inBox = false;
     private void OnCollisionEnter2D(Collision2D other)
     {
+        if (other.gameObject.CompareTag("Fruit") || other.gameObject.CompareTag("Boder"))
+        {
+            inBox = true;
+        }
         if (other.gameObject.CompareTag("Fruit"))
         {
             var oFruit = other.gameObject.GetComponent<Fruit>();

@@ -36,12 +36,21 @@ public class Spawner : MonoBehaviour
 
     void SpawnNextInBubble()
     {
-        int index = Random.Range(0, 5);
+        int index = RandomIndex();
         GameObject fruitPrefab = fruits[index];
         
         nextFruitPrefab = Instantiate(fruitPrefab, spawnNextFruitPoint.position, spawnNextFruitPoint.rotation);
         nextFruitPrefab.GetComponent<Rigidbody2D>().simulated = false;
         nextFruitPrefab.transform.SetParent(nextFruitBubble);
+    }
+
+    int RandomIndex()
+    {
+        int number  = Random.Range(1, 101);
+        if (number <= 40) return 0;
+        if (number <= 70) return 1;
+        if (number <= 80) return 2;
+        return 3;
     }
     void MoveToHand()
     {
@@ -58,7 +67,7 @@ public class Spawner : MonoBehaviour
         currentFruitPrefab.transform.SetParent(fruitsContainer);
         currentFruitPrefab.GetComponent<Rigidbody2D>().simulated = true;
         currentFruitPrefab = null;
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.7f);
         
         MoveToHand();
         SpawnNextInBubble();
