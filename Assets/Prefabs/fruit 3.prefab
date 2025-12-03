@@ -108,7 +108,9 @@ MonoBehaviour:
   fruitLevel: 3
   nextFruitPrefab: {fileID: 4995443052834400305, guid: 3704963e486585e4093fa39f54ee86ff, type: 3}
   scoreValue: 30
+  vfxMergePrefab: {fileID: 742211582220600018, guid: 8d931dce3f50c3940a0e0968bfe6cf00, type: 3}
   mass: 1.6
+  inBox: 0
 --- !u!50 &6839424795566981869
 Rigidbody2D:
   serializedVersion: 5

@@ -44,12 +44,14 @@ public class Spawner : MonoBehaviour
         nextFruitPrefab.transform.SetParent(nextFruitBubble);
     }
 
+
+
     int RandomIndex()
     {
         int number  = Random.Range(1, 101);
         if (number <= 40) return 0;
         if (number <= 70) return 1;
-        if (number <= 80) return 2;
+        if (number <= 90) return 2;
         return 3;
     }
     void MoveToHand()
