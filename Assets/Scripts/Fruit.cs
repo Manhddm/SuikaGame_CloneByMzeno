@@ -5,6 +5,7 @@ using Random = UnityEngine.Random;
 
 public class Fruit : MonoBehaviour
 {
+    public static Action OnFruitMerged;
     public int fruitLevel;
     public GameObject nextFruitPrefab;
     public int scoreValue = 10;
@@ -61,7 +62,7 @@ public class Fruit : MonoBehaviour
             //Them luc day
             newFruit.GetComponent<Rigidbody2D>().linearVelocity  = Vector2.zero;
             GameManager.Instance.AddScore(scoreValue);
-            GameManager.Instance.TriggerMerge();
+            OnFruitMerged?.Invoke();
         }
         
     }

@@ -26,15 +26,6 @@ public class Spawner : MonoBehaviour
         SpawnNextInBubble();
     }
 
-    private void Update()
-    {
-        if (GameManager.Instance.gameOver) return;
-        if (!isSpawning && currentFruitPrefab != null && Input.GetMouseButtonDown(0))
-        {
-            AudioManager.Instance.PlayDropSfx();
-            StartCoroutine(DropFruit());
-        }
-    }
 
     void SpawnNextInBubble()
     {
@@ -71,11 +62,16 @@ public class Spawner : MonoBehaviour
         currentFruitPrefab.transform.SetParent(fruitsContainer);
         currentFruitPrefab.GetComponent<Rigidbody2D>().simulated = true;
         currentFruitPrefab = null;
-        yield return new WaitForSeconds(0.7f);
+        yield return new WaitForSeconds(0.5f);
         
         MoveToHand();
         SpawnNextInBubble();
         isSpawning = false;
+    }
+    public void DropCurrentFruit()
+    {
+        if (isSpawning) return;
+        StartCoroutine(DropFruit());
     }
     
 }

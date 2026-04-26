@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public CanvasGroup gameOverPanelCanvasGroup;
     public float fadeDuration = 1f;
-    public event Action OnMergeEvent;
+
     public event Action GameOverEvent;
     private int currentScore = 0;
     public bool gameOver = false;
@@ -42,11 +42,7 @@ public class GameManager : MonoBehaviour
     {
         scoreText.text = currentScore.ToString();
     }
-
-    public void TriggerMerge()
-    {
-        OnMergeEvent?.Invoke();
-    }
+    
     
     public void GameOver()
     {

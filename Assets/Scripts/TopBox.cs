@@ -8,5 +8,9 @@ public class TopBox : MonoBehaviour
         {
             GameManager.Instance.GameOver();
         }
+        else if (other.tag == "Fruit" && !other.gameObject.GetComponent<Fruit>().inBox)
+        {
+            other.gameObject.GetComponent<Fruit>().inBox = true;
+        }
     }
 }
