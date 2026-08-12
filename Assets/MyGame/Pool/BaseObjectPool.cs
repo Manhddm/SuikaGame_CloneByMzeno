@@ -10,6 +10,8 @@ namespace MyGame.Pool
 
         private readonly Stack<T> _items;
         private readonly Func<T> _factory;
+        private readonly HashSet<T> _inactiveItems = new();
+        private readonly HashSet<T> _ownedItems = new();
         private readonly int _maxInactiveSize;
 
         public int CountAll { get; private set; }
@@ -64,6 +66,7 @@ namespace MyGame.Pool
             if (_items.Count > 0)
             {
                 item = _items.Pop();
+                _inactiveItems.Remove(item);
             }
             else
             {
@@ -83,20 +86,24 @@ namespace MyGame.Pool
             {
                 throw new ArgumentNullException(nameof(item));
             }
-
-            if (_items.Contains(item))
+            if (!_ownedItems.Contains(item))
+            {
+                throw new InvalidOperationException(
+                    "The item does not belong to this pool."
+                );
+            }
+            if (!_inactiveItems.Add(item))
             {
                 throw new InvalidOperationException(
                     "The item is already in the pool."
                 );
             }
-
             OnReturn(item);
 
             if (_items.Count >= _maxInactiveSize)
             {
+                _inactiveItems.Remove(item);
                 CountAll--;
-
                 OnDestroy(item);
 
                 return;
@@ -115,6 +122,13 @@ namespace MyGame.Pool
             {
                 throw new InvalidOperationException(
                     "The pool factory returned null."
+                );
+            }
+
+            if (!_ownedItems.Add(item))
+            {
+                throw new InvalidOperationException(
+                    "The pool factory returned an item that is already owned by this pool."
                 );
             }
 
