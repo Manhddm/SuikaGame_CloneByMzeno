@@ -1,181 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine.Pool;
 
 namespace MyGame.Pool
 {
-    public abstract class BaseObjectPool<T> : IPool<T>, IPrewarmablePool, IDisposable
+    public abstract class BaseObjectPool<T> : IPool<T>
         where T : class
     {
-        private const int DefaultMaxSize = 30;
+        private readonly ObjectPool<T> _pool;
+        public int CountAll => _pool.CountAll;
+        public int CountActive => _pool.CountActive;
+        public int CountInactive => _pool.CountInactive;
 
-        private readonly Stack<T> _items;
-        private readonly Func<T> _factory;
-        private readonly HashSet<T> _inactiveItems = new();
-        private readonly HashSet<T> _ownedItems = new();
-        private readonly int _maxInactiveSize;
-        private bool _disposed;
-
-        public int CountAll { get; private set; }
-
-        public int CountInactive => _items.Count;
-
-        public int CountActive => CountAll - CountInactive;
-
-        public int MaxInactiveSize => _maxInactiveSize;
-        public bool IsDisposed => _disposed;
-
-        protected BaseObjectPool(
-            Func<T> factory,
-            int maxInactiveSize = DefaultMaxSize,
-            int initCapacity = 0)
+        protected BaseObjectPool(bool collectionCheck = true, int defaultPoolSize = 20, int maxPoolSize = 100)
         {
-            _factory = factory
-                       ?? throw new ArgumentNullException(nameof(factory));
-
-            if (maxInactiveSize <= 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(maxInactiveSize),
-                    "Max size must be greater than 0."
-                );
-            }
-
-            if (initCapacity < 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(initCapacity),
-                    "Initial capacity must be greater than or equal to 0."
-                );
-            }
-
-            if (initCapacity > maxInactiveSize)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(initCapacity),
-                    "Initial capacity cannot exceed max size."
-                );
-            }
-
-            _maxInactiveSize = maxInactiveSize;
-
-            _items = new Stack<T>(initCapacity);
+            _pool = new ObjectPool<T>(
+                createFunc: CreateInternal,
+                actionOnGet: OnRent,
+                actionOnRelease: OnReturn,
+                actionOnDestroy: OnDestroy,
+                collectionCheck: collectionCheck,
+                defaultCapacity: defaultPoolSize,
+                maxSize: maxPoolSize
+            );
         }
+
+        protected abstract T Create();
 
         public T Rent()
         {
-            ThrowIfDisposed();
-            T item;
-
-            if (_items.Count > 0)
-            {
-                item = _items.Pop();
-                _inactiveItems.Remove(item);
-            }
-            else
-            {
-                item = Create();
-
-                CountAll++;
-            }
-
-            OnRent(item);
-
-            return item;
+            return _pool.Get();
         }
 
         public void Return(T item)
         {
-            ThrowIfDisposed();
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            if (!_ownedItems.Contains(item))
-            {
-                throw new InvalidOperationException(
-                    "The item does not belong to this pool."
-                );
-            }
-
-            if (_disposed)
-            {
-                _ownedItems.Remove(item);
-
-                CountAll--;
-
-                OnReturn(item);
-                OnDestroy(item);
-
-                return;
-            }
-
-            if (!_inactiveItems.Add(item))
-            {
-                throw new InvalidOperationException(
-                    "The item is already in the pool."
-                );
-            }
-
-            OnReturn(item);
-
-            if (_items.Count >= _maxInactiveSize)
-            {
-                _inactiveItems.Remove(item);
-                _ownedItems.Remove(item);
-                CountAll--;
-                OnDestroy(item);
-
-                return;
-            }
-
-            _items.Push(item);
-        }
-
-        private void ClearInternal()
-        {
-            while (_items.Count > 0)
-            {
-                T item = _items.Pop();
-
-                _inactiveItems.Remove(item);
-                _ownedItems.Remove(item);
-
-                CountAll--;
-
-                OnDestroy(item);
-            }
+            _pool.Release(item);
         }
 
         public void Clear()
         {
-            ThrowIfDisposed();
-            ClearInternal();
-        }
-
-        #region Helper Methods
-
-        private T Create()
-        {
-            T item = _factory();
-
-            if (item == null)
-            {
-                throw new InvalidOperationException(
-                    "The pool factory returned null."
-                );
-            }
-
-            if (!_ownedItems.Add(item))
-            {
-                throw new InvalidOperationException(
-                    "The pool factory returned an item that is already owned by this pool."
-                );
-            }
-
-            OnCreate(item);
-
-            return item;
+            _pool.Clear();
         }
 
         protected virtual void OnCreate(T item)
@@ -194,55 +58,20 @@ namespace MyGame.Pool
         {
         }
 
-        private void ThrowIfDisposed()
+        private T CreateInternal()
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(
-                    GetType().Name
-                );
-            }
-        }
+            T item = Create();
 
-        #endregion
-
-        public void Prewarm(int count)
-        {
-            ThrowIfDisposed();
-            if (count < 0)
+            if (item == null)
             {
-                throw new ArgumentOutOfRangeException(
-                    nameof(count),
-                    "Count must be greater than or equal to 0."
+                throw new InvalidOperationException(
+                    $"{GetType().Name}.Create() returned null."
                 );
             }
 
-            if (count > MaxInactiveSize)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(count),
-                    "Count cannot exceed max inactive size."
-                );
-            }
+            OnCreate(item);
 
-            while (_items.Count < count)
-            {
-                T item = Create();
-                CountAll++;
-                _inactiveItems.Add(item);
-                _items.Push(item);
-            }
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            ClearInternal();
-            _disposed = true;
+            return item;
         }
     }
 }
