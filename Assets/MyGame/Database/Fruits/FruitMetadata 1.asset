@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969d20399cda79d4fa750c684d786dd6, type: 3}
+  m_Name: FruitMetadata 1
+  m_EditorClassIdentifier: Assembly-CSharp::Core.Fruits.FruitMetadata
+  tier: 1
+  view: {fileID: 9006199649726949885, guid: 3df941fc54760b84f958090149cf9360, type: 3}
+  scoreOnMerge: 15
+  mass: 1.2
+  radius: 0.6693604
