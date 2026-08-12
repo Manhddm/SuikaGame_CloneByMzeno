@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MyGame.Pool
 {
-    public abstract class BaseObjectPool<T> : IPool<T>
+    public abstract class BaseObjectPool<T> : IPool<T>, IPrewarmablePool
         where T : class
     {
         private const int DefaultMaxSize = 30;
@@ -168,5 +168,31 @@ namespace MyGame.Pool
         }
 
         #endregion
+
+        public void Prewarm(int count)
+        {
+            if (count < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(count),
+                    "Count must be greater than or equal to 0."
+                );
+            }
+            if (count > MaxInactiveSize)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(count),
+                    "Count cannot exceed max inactive size."
+                );
+            }
+
+            while (_items.Count < count)
+            {
+                T item = Create();
+                CountAll++;
+                _inactiveItems.Add(item);
+                _items.Push(item);
+            }
+        }
     }
 }
