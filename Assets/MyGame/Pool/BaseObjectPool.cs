@@ -103,6 +103,7 @@ namespace MyGame.Pool
             if (_items.Count >= _maxInactiveSize)
             {
                 _inactiveItems.Remove(item);
+                _ownedItems.Remove(item);
                 CountAll--;
                 OnDestroy(item);
 
@@ -110,6 +111,19 @@ namespace MyGame.Pool
             }
 
             _items.Push(item);
+        }
+
+        public void Clear()
+        {
+            
+            while (_items.Count > 0)
+            {
+                T item = _items.Pop();
+                _inactiveItems.Remove(item);
+                _ownedItems.Remove(item);
+                CountAll--;
+                OnDestroy(item);
+            }
         }
 
         #region Helper Methods
