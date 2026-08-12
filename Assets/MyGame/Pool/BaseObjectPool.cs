@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MyGame.Pool
 {
-    public abstract class BaseObjectPool<T> : IPool<T>, IPrewarmablePool
+    public abstract class BaseObjectPool<T> : IPool<T>, IPrewarmablePool, IDisposable
         where T : class
     {
         private const int DefaultMaxSize = 30;
@@ -13,6 +13,7 @@ namespace MyGame.Pool
         private readonly HashSet<T> _inactiveItems = new();
         private readonly HashSet<T> _ownedItems = new();
         private readonly int _maxInactiveSize;
+        private bool _disposed;
 
         public int CountAll { get; private set; }
 
@@ -21,6 +22,7 @@ namespace MyGame.Pool
         public int CountActive => CountAll - CountInactive;
 
         public int MaxInactiveSize => _maxInactiveSize;
+        public bool IsDisposed => _disposed;
 
         protected BaseObjectPool(
             Func<T> factory,
@@ -28,7 +30,7 @@ namespace MyGame.Pool
             int initCapacity = 0)
         {
             _factory = factory
-                ?? throw new ArgumentNullException(nameof(factory));
+                       ?? throw new ArgumentNullException(nameof(factory));
 
             if (maxInactiveSize <= 0)
             {
@@ -61,6 +63,7 @@ namespace MyGame.Pool
 
         public T Rent()
         {
+            ThrowIfDisposed();
             T item;
 
             if (_items.Count > 0)
@@ -82,22 +85,38 @@ namespace MyGame.Pool
 
         public void Return(T item)
         {
+            ThrowIfDisposed();
             if (item == null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
+
             if (!_ownedItems.Contains(item))
             {
                 throw new InvalidOperationException(
                     "The item does not belong to this pool."
                 );
             }
+
+            if (_disposed)
+            {
+                _ownedItems.Remove(item);
+
+                CountAll--;
+
+                OnReturn(item);
+                OnDestroy(item);
+
+                return;
+            }
+
             if (!_inactiveItems.Add(item))
             {
                 throw new InvalidOperationException(
                     "The item is already in the pool."
                 );
             }
+
             OnReturn(item);
 
             if (_items.Count >= _maxInactiveSize)
@@ -113,17 +132,25 @@ namespace MyGame.Pool
             _items.Push(item);
         }
 
-        public void Clear()
+        private void ClearInternal()
         {
-            
             while (_items.Count > 0)
             {
                 T item = _items.Pop();
+
                 _inactiveItems.Remove(item);
                 _ownedItems.Remove(item);
+
                 CountAll--;
+
                 OnDestroy(item);
             }
+        }
+
+        public void Clear()
+        {
+            ThrowIfDisposed();
+            ClearInternal();
         }
 
         #region Helper Methods
@@ -167,10 +194,21 @@ namespace MyGame.Pool
         {
         }
 
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(
+                    GetType().Name
+                );
+            }
+        }
+
         #endregion
 
         public void Prewarm(int count)
         {
+            ThrowIfDisposed();
             if (count < 0)
             {
                 throw new ArgumentOutOfRangeException(
@@ -178,6 +216,7 @@ namespace MyGame.Pool
                     "Count must be greater than or equal to 0."
                 );
             }
+
             if (count > MaxInactiveSize)
             {
                 throw new ArgumentOutOfRangeException(
@@ -193,6 +232,17 @@ namespace MyGame.Pool
                 _inactiveItems.Add(item);
                 _items.Push(item);
             }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            ClearInternal();
+            _disposed = true;
         }
     }
 }
