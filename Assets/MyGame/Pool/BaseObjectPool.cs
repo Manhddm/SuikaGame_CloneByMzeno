@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine.Pool;
 
 namespace MyGame.Pool
 {
-    public abstract class BaseObjectPool<T> : IPool<T>
+    public abstract class BaseObjectPool<T> : IPool<T>, IDisposable
         where T : class
     {
         private readonly ObjectPool<T> _pool;
+        private bool _disposed;
+
         public int CountAll => _pool.CountAll;
         public int CountActive => _pool.CountActive;
         public int CountInactive => _pool.CountInactive;
@@ -29,17 +30,36 @@ namespace MyGame.Pool
 
         public T Rent()
         {
+            ThrowIfDisposed();
             return _pool.Get();
         }
 
         public void Return(T item)
         {
+            ThrowIfDisposed();
             _pool.Release(item);
         }
 
         public void Clear()
         {
             _pool.Clear();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
+            try
+            {
+                _pool.Dispose();
+            }
+            finally
+            {
+                OnDispose();
+            }
         }
 
         protected virtual void OnCreate(T item)
@@ -56,6 +76,16 @@ namespace MyGame.Pool
 
         protected virtual void OnDestroy(T item)
         {
+        }
+        
+        protected virtual void OnDispose()
+        {
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().Name);
         }
 
         private T CreateInternal()

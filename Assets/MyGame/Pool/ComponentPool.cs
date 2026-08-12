@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace MyGame.Pool
 {
@@ -6,17 +8,29 @@ namespace MyGame.Pool
     {
         private readonly T _prefab;
         private readonly Transform _poolParentInactive;
-        protected ComponentPool(T prefab, bool collectionCheck = true, int defaultPoolSize = 20, int maxPoolSize = 100)
+
+        protected ComponentPool(
+            T prefab,
+            bool collectionCheck = true,
+            int defaultPoolSize = 20,
+            int maxPoolSize = 100,
+            bool dontDestroyOnLoad = false)
             : base(collectionCheck, defaultPoolSize, maxPoolSize)
         {
             if (prefab == null)
             {
-                throw new MissingReferenceException(
-                    $"{typeof(T).Name} prefab is missing."
-                );
+                throw new ArgumentNullException(nameof(prefab), $"{typeof(T).Name} prefab is missing.");
             }
+
             _prefab = prefab;
-            _poolParentInactive = new GameObject($"{_prefab.name} Inactive Pool").transform;
+
+            var container = new GameObject($"{_prefab.name} Inactive Pool");
+            if (dontDestroyOnLoad)
+            {
+                Object.DontDestroyOnLoad(container);
+            }
+
+            _poolParentInactive = container.transform;
         }
 
         protected override T Create()
@@ -35,16 +49,24 @@ namespace MyGame.Pool
             item.gameObject.SetActive(true);
         }
 
+        protected override void OnReturn(T item)
+        {
+            item.transform.SetParent(_poolParentInactive, false);
+            item.gameObject.SetActive(false);
+        }
+
         protected override void OnDestroy(T item)
         {
             if (item == null) return;
             Object.Destroy(item.gameObject);
         }
 
-        protected override void OnReturn(T item)
+        protected override void OnDispose()
         {
-            item.gameObject.SetActive(false);
-            item.transform.SetParent(_poolParentInactive, false);
+            if (_poolParentInactive != null)
+            {
+                Object.Destroy(_poolParentInactive.gameObject);
+            }
         }
     }
 }
